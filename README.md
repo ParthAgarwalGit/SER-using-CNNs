@@ -121,3 +121,22 @@ Monitor: val_loss.
 Factor: 0.2 (Multiplies LR by 0.2 if stuck).
 Patience: 5 epochs.
 ModelCheckpoint: Saves only the weights with the highest val_accuracy.
+
+Test Results using predict.py
+------------------------------
+File:       test1.wav
+Prediction: NEUTRAL
+Confidence: 98.34%
+------------------------------
+
+------------------------------
+File:       test2.wav
+Prediction: CALM
+Confidence: 98.38%
+------------------------------
+
+------------------------------
+File:       test3.wav
+Prediction: HAPPY
+Confidence: 99.14%
+------------------------------

@@ -74,3 +74,50 @@ final_emotion_model.h5: Saved Keras model weights.
 predict.py: Standalone inference script for external testing.
 
 requirements.txt: List of required Python packages.
+
+1. Data Augmentations
+To prevent the model from memorizing specific actor voices (overfitting) and to increase the effective size of the training set, the following augmentations were applied only to the training data:
+
+Noise Injection:
+Method: Added random Gaussian white noise to the raw audio signal.
+Factor: 0.005 (Adds a subtle hiss without drowning out the speech).
+Purpose: Helps the model ignore background silence and focus on vocal energy.
+
+Pitch Shifting:
+Method: Shifted the pitch of the audio up using librosa.effects.pitch_shift.
+Steps: +2 semitones.
+Purpose: Simulates different vocal characteristics (e.g., making a male voice sound slightly higher), forcing the CNN to learn the pattern of the emotion rather than the specific pitch of the actor.
+
+Note: Time Stretching was explored during EDA but excluded from the final training pipeline to maintain strict temporal alignment (3 seconds) for the CNN.
+
+2. Key Settings & Hyperparameters
+A. Audio Preprocessing
+Sample Rate (SR): 22050 Hz (Standard for speech analysis; captures frequencies up to ~11kHz).
+Silence Trimming: Top-dB = 20 (Removes leading/trailing silence quieter than 20dB below the peak).
+Fixed Duration: 3.0 Seconds.
+Shorter clips: Padded with zeros (silence) to reach 3s.
+Longer clips: Truncated to the first 3s.
+
+B. Feature Engineering (Spectrograms)
+Feature Type: Log-Mel Spectrogram.
+Mel Bands (Height): 128 (Vertical resolution).
+Time Steps (Width): 130 (Horizontal resolution, resulting from 3s duration).
+Scaling: Logarithmic (dB) scale (mimics human hearing sensitivity).
+Final Input Shape: (128, 130, 1) (Grayscale Image).
+
+C. Model Training Config
+Batch Size: 64 (Optimized for GPU acceleration).
+Optimizer: Adam (Adaptive Moment Estimation).
+Initial Learning Rate: Default (0.001).
+Loss Function: Sparse Categorical Crossentropy (Since targets are integers 0-7).
+Epochs: 50 - 70 (Stopped early via callback).
+
+D. Callbacks (Regularization)
+EarlyStopping:
+Monitor: val_loss.
+Patience: 10 epochs (Stops if validation loss doesn't improve for 10 epochs).
+ReduceLROnPlateau:
+Monitor: val_loss.
+Factor: 0.2 (Multiplies LR by 0.2 if stuck).
+Patience: 5 epochs.
+ModelCheckpoint: Saves only the weights with the highest val_accuracy.
